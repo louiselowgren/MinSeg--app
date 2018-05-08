@@ -19,6 +19,7 @@ import android.view.MotionEvent;
         import android.view.View;
         import android.view.View.OnClickListener;
         import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -36,13 +37,19 @@ public class MainActivity extends Activity implements OnClickListener {
     TextView seekBarTxt;
     TextView readTxt;
     Button sendBtn;
-    EditText sendTxt;
+    Button setBtn;
+    EditText entervalue;
     SeekBar seekBar;
+    TextView btAddress;
+
+    CheckBox posBox;
+    CheckBox velBox;
 
     String red = "red";
     String green = "green";
     String blue = "blue";
     String readString;
+    String sendString;
 
     int nbrBytes;
     byte[] buffer = new byte[1024];
@@ -59,7 +66,7 @@ public class MainActivity extends Activity implements OnClickListener {
         // INIT SETUP;
 
         appContext = getApplicationContext();
-        Setup setup = new Setup(appContext, t1);
+        Setup setup = new Setup(appContext, btAddress);
         btSocket = setup.setUpBluetooth();
         if(btSocket != null){
             Log.d(TAG, "OnCreate: setupBluetooth finished");
@@ -67,47 +74,53 @@ public class MainActivity extends Activity implements OnClickListener {
             Log.d(TAG, "OnCreate: socket error");
         }
 
+
+
     }
 
     @SuppressLint("ClickableViewAccessibility")
     private void setw() throws IOException {
-        t1=(TextView)findViewById(R.id.textView1);
-        i1=(Button)findViewById(R.id.button1);
-        seekBarTxt = (TextView)findViewById(R.id.seekBarTxt);
+
         readTxt = (TextView) findViewById(R.id.readTxt);
-        sendBtn = (Button)findViewById(R.id.sendBtn);
-        sendTxt = (EditText)findViewById(R.id.sendTxt);
+        seekBarTxt = (TextView) findViewById(R.id.seekBarTxt);
+        sendBtn = (Button) findViewById(R.id.sendBtn);
+        setBtn = (Button) findViewById(R.id.setBtn);
+        entervalue = (EditText) findViewById(R.id.enterVal);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
-
-        //ReadThread readThread = new ReadThread(btSocket);
-        //readThread.start();
-
-
-        /*
-        i1.setOnTouchListener(new View.OnTouchListener()
-        {   @Override
-        public boolean onTouch(View v, MotionEvent event){
-            if(event.getAction() == MotionEvent.ACTION_DOWN) {led_on_off("red");}
-            if(event.getAction() == MotionEvent.ACTION_UP){led_on_off("blue");}
-            return true;}
-        });
-        */
+        posBox = (CheckBox) findViewById(R.id.box_pos);
+        velBox = (CheckBox) findViewById(R.id.box_val);
+        btAddress = findViewById(R.id.btAddress);
 
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                led_on_off(sendTxt.getText().toString());
-                sendTxt.setText("");
+                Log.d(TAG, "OnClick: checking boxes.....");
+                if(posBox.isChecked()){
+                    Log.d(TAG, "OnClick: positionbox.....");
+                    sendString = "p" + entervalue.getText().toString();
+                    writeBytes(sendString);
+                    Log.d(TAG, "OnClick: sent!");
+                }else if(velBox.isChecked()){
+                    Log.d(TAG, "OnClick: velbox.....");
+                    sendString = "s" + entervalue.getText().toString();
+                    writeBytes(sendString);
+                    Log.d(TAG, "OnClick: sent!");
+                }else{
+                    Log.d(TAG, "OnClick: no box checked");
+                    Toast.makeText(getApplicationContext(),"Please check one box", Toast.LENGTH_SHORT).show();
+                }
+
+
+                entervalue.setText("");
                 readTxt.setText("");
 
-                //220 nope, 250 nope, 500 ok, 1000 ok
                 sleep(1000);
                 readTxt.setText(read());
 
             }
         });
 
-
+        /**
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -126,15 +139,17 @@ public class MainActivity extends Activity implements OnClickListener {
 
             }
 
+
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+
                 seekBar.setProgress(50);
             }
-        });
+        });**/
     }
 
 
@@ -149,10 +164,12 @@ public class MainActivity extends Activity implements OnClickListener {
         }
     }
 
-    private void led_on_off(String i) {
+    private void writeBytes(String i) {
         try {
             if (btSocket!=null){
+                Log.d(TAG, "Led_on_off: writing.....");
                 btSocket.getOutputStream().write(i.toString().getBytes());
+                Log.d(TAG, "Led_on_off: done writing.");
             }
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(),e.getMessage(), Toast.LENGTH_SHORT).show();

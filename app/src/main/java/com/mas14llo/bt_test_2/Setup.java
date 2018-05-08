@@ -48,6 +48,7 @@ public class Setup {
     private void bluetooth_connect_device() throws IOException {
         try {
             myBluetooth = BluetoothAdapter.getDefaultAdapter();
+            Log.d(TAG,"bluetoothconnectdevice: defult adapter = " + myBluetooth.getAddress() );
             address = myBluetooth.getAddress();
             pairedDevices = myBluetooth.getBondedDevices();
 
